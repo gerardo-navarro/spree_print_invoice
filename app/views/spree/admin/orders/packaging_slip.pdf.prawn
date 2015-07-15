@@ -5,10 +5,17 @@ define_grid(columns: 5, rows: 8, gutter: 10)
 
 # HEADER
 repeat(:all) do
-  im = Rails.application.assets.find_asset(Spree::PrintInvoice::Config[:logo_path])
-  if im && File.exist?(im.pathname)
-    image im, vposition: :top, height: 40, scale: Spree::PrintInvoice::Config[:logo_scale]
+
+  config_logo_path = Spree::PrintInvoice::Config[:logo_path]
+  logo_asset = Rails.application.assets.find_asset(config_logo_path)
+
+  if logo_asset && File.exist?(logo_asset.pathname)
+    im = logo_asset.pathname
+  else
+    im = config_logo_path
   end
+
+  image im, vposition: :top, height: 40, scale: Spree::PrintInvoice::Config[:logo_scale]
 
   grid([0,3], [0,4]).bounding_box do
     font @font_face, size: @font_size
