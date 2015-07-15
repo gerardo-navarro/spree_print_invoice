@@ -91,7 +91,10 @@ Spree::Order.class_eval do
     file_path = pdf_file_path(template)
 
     unless File.exist?(file_path)
-      File.open(file_path, "wb") { |f| f.puts render_pdf(template) }
+      # If an error occures while rendering the invoice pdf then no file gets stored and the exception is raised  ...
+      invoice_pdf = render_pdf(template)
+
+      File.open(file_path, "wb") { |f| f.puts invoice_pdf }
     end
 
     IO.binread(file_path)
