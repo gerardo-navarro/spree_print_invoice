@@ -6,24 +6,8 @@ define_grid(columns: 5, rows: 8, gutter: 10)
 # HEADER
 repeat(:all) do
 
-  config_logo_path = Spree::PrintInvoice::Config[:logo_path]
-
-  # If no logo_path set, we just do not add the image to the pdf
-  unless config_logo_path.blank?
-
-    # Trying to extract the image from the Rails Assets
-    image_from_asset = Rails.application.assets.find_asset(config_logo_path)
-
-    image_file_path = if image_from_asset = Rails.application.assets.find_asset(config_logo_path)
-                        image_from_asset.pathname
-                      else
-                        config_logo_path
-                      end
-
-    if File.exist?(image_file_path)
-      image image_file_path, vposition: :top, height: 40, scale: Spree::PrintInvoice::Config[:logo_scale]
-    end
-  end
+  # @logo_image_file_path is calculated beforehand. If a correct file path was found, we include the logo image in the pdf
+  image @logo_image_file_path, vposition: :top, height: 40, scale: Spree::PrintInvoice::Config[:logo_scale] if @logo_image_file_path
 
   grid([0, 3], [0, 4]).bounding_box do
     font @font_face, size: @font_size
