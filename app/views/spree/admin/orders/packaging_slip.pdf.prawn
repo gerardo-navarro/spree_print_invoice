@@ -7,17 +7,25 @@ define_grid(columns: 5, rows: 8, gutter: 10)
 repeat(:all) do
 
   config_logo_path = Spree::PrintInvoice::Config[:logo_path]
-  logo_asset = Rails.application.assets.find_asset(config_logo_path)
 
-  if logo_asset && File.exist?(logo_asset.pathname)
-    im = logo_asset.pathname
-  else
-    im = config_logo_path
+  # If no logo_path set, we just do not add the image to the pdf
+  unless config_logo_path.blank?
+
+    # Trying to extract the image from the Rails Assets
+    image_from_asset = Rails.application.assets.find_asset(config_logo_path)
+
+    image_file_path = if image_from_asset = Rails.application.assets.find_asset(config_logo_path)
+                        image_from_asset.pathname
+                      else
+                        config_logo_path
+                      end
+
+    if File.exist?(image_file_path)
+      image image_file_path, vposition: :top, height: 40, scale: Spree::PrintInvoice::Config[:logo_scale]
+    end
   end
 
-  image im, vposition: :top, height: 40, scale: Spree::PrintInvoice::Config[:logo_scale]
-
-  grid([0,3], [0,4]).bounding_box do
+  grid([0, 3], [0, 4]).bounding_box do
     font @font_face, size: @font_size
     text Spree.t(:packaging_slip, scope: :print_invoice), align: :right, style: :bold, size: 18
     move_down 4
@@ -39,7 +47,7 @@ repeat(:all) do
 end
 
 # CONTENT
-grid([1,0], [6,4]).bounding_box do
+grid([1, 0], [6, 4]).bounding_box do
 
   font @font_face, size: @font_size
 
@@ -49,17 +57,17 @@ grid([1,0], [6,4]).bounding_box do
     ship_address = @order.ship_address
 
     move_down 2
-    address_cell_billing  = make_cell(content: Spree.t(:billing_address), font_style: :bold)
+    address_cell_billing = make_cell(content: Spree.t(:billing_address), font_style: :bold)
     address_cell_shipping = make_cell(content: Spree.t(:shipping_address), font_style: :bold)
 
-    billing =  "#{bill_address.firstname} #{bill_address.lastname}"
+    billing = "#{bill_address.firstname} #{bill_address.lastname}"
     billing << "\n#{bill_address.address1}"
     billing << "\n#{bill_address.address2}" unless bill_address.address2.blank?
     billing << "\n#{bill_address.city}, #{bill_address.state_text} #{bill_address.zipcode}"
     billing << "\n#{bill_address.country.name}"
     billing << "\n#{bill_address.phone}"
 
-    shipping =  "#{ship_address.firstname} #{ship_address.lastname}"
+    shipping = "#{ship_address.firstname} #{ship_address.lastname}"
     shipping << "\n#{ship_address.address1}"
     shipping << "\n#{ship_address.address2}" unless ship_address.address2.blank?
     shipping << "\n#{ship_address.city}, #{ship_address.state_text} #{ship_address.zipcode}"
@@ -73,20 +81,20 @@ grid([1,0], [6,4]).bounding_box do
 
   move_down 10
 
-  header =  [
-    make_cell(content: Spree.t(:sku)),
-    make_cell(content: Spree.t(:item_description)),
-    make_cell(content: Spree.t(:options)),
-    make_cell(content: Spree.t(:qty))
+  header = [
+      make_cell(content: Spree.t(:sku)),
+      make_cell(content: Spree.t(:item_description)),
+      make_cell(content: Spree.t(:options)),
+      make_cell(content: Spree.t(:qty))
   ]
   data = [header]
 
   @order.line_items.each do |item|
     row = [
-      item.variant.sku,
-      item.variant.name,
-      item.variant.options_text,
-      item.quantity
+        item.variant.sku,
+        item.variant.name,
+        item.variant.options_text,
+        item.quantity
     ]
     data += [row]
   end
@@ -109,13 +117,13 @@ end
 # FOOTER
 if Spree::PrintInvoice::Config[:use_footer]
   repeat(:all) do
-    grid([7,0], [7,4]).bounding_box do
+    grid([7, 0], [7, 4]).bounding_box do
 
-      data  = []
-      data << [make_cell(content: Spree.t(:vat, scope: :print_invoice) , colspan: 2, align: :center)]
+      data = []
+      data << [make_cell(content: Spree.t(:vat, scope: :print_invoice), colspan: 2, align: :center)]
       data << [make_cell(content: '', colspan: 2)]
       data << [make_cell(content: Spree::PrintInvoice::Config[:footer_left], align: :left),
-      make_cell(content: Spree::PrintInvoice::Config[:footer_right], align: :right)]
+               make_cell(content: Spree::PrintInvoice::Config[:footer_right], align: :right)]
 
       table(data, position: :center, column_widths: [270, 270]) do
         row(0..2).style borders: []
@@ -126,13 +134,13 @@ end
 
 # PAGE NUMBER
 if Spree::PrintInvoice::Config[:use_page_numbers]
-  string  = "#{Spree.t(:page, scope: :print_invoice)} <page> #{Spree.t(:of, scope: :print_invoice)} <total>"
+  string = "#{Spree.t(:page, scope: :print_invoice)} <page> #{Spree.t(:of, scope: :print_invoice)} <total>"
   options = {
-    at: [bounds.right - 150, 0],
-    width: 150,
-    align: :right,
-    start_count_at: 1,
-    color: '000000'
+      at: [bounds.right - 150, 0],
+      width: 150,
+      align: :right,
+      start_count_at: 1,
+      color: '000000'
   }
   number_pages string, options
 end

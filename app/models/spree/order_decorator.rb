@@ -72,13 +72,14 @@ Spree::Order.class_eval do
   #
   # Prawn templates need to be placed in +app/views/spree/admin/orders/+ folder.
   #
-  # Assigns +@order+ instance variable
+  # Assigns +@order+ and +@logo_image_file_path+ instance variable
   #
   def render_pdf(template)
     ActionView::Base.new(
       ActionController::Base.view_paths,
-      {order: self}
-    ).render(template: "spree/admin/orders/#{template}.pdf.prawn")
+      { order: self,
+        logo_image_file_path: logo_image_file_path
+      }).render(template: "spree/admin/orders/#{template}.pdf.prawn")
   end
 
   private
@@ -98,5 +99,32 @@ Spree::Order.class_eval do
     end
 
     IO.binread(file_path)
+  end
+
+  def logo_image_file_path
+
+    config_logo_path = Spree::PrintInvoice::Config[:logo_path]
+
+    return nil if config_logo_path.blank?
+
+    # Trying to extract the image from the Rails Assets
+    logo_image_file_path = if asset_image = Rails.application.assets.find_asset(config_logo_path)
+                        asset_image.pathname
+                      else
+                        config_logo_path
+                      end
+
+    unless File.exist?(logo_image_file_path)
+      Rails.logger.warn("============")
+      Rails.logger.warn("============")
+      Rails.logger.warn("!!! The absolute logo file path '#{logo_image_file_path}' does not exist. The logo image will not be included! Please insert a correct logo image!")
+      Rails.logger.warn("============")
+      Rails.logger.warn("============")
+      return nil
+    end
+
+
+    return logo_image_file_path
+
   end
 end
