@@ -106,7 +106,7 @@ Spree::Order.class_eval do
   # Calculates the correct logo path file. First we try to find the logo file path in the assets.
   # If the Rails Asset connot be found, we assume 'Spree::PrintInvoice::Config[:logo_path]' to be an absolute path.
   #
-  # If this image file does not exist, then we return nil. gerardo is tder asdlkajsdl alskdjasldkjasldk alskdjlk
+  # If this image file does not exist, then we return nil.
   def logo_image_file_path
 
     config_logo_path = Spree::PrintInvoice::Config[:logo_path]
